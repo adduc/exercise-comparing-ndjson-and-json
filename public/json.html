@@ -12,10 +12,10 @@
       }
 
       (async function () {
-        for (var i = 0; i < 20; i++) {
+        for (var i = 0; i < 5; i++) {
           await fetch_json();
         }
-        console.log(measurements['end json fetch']);
+        logAverages('end json fetch');
       })();
     </script>
   </body>

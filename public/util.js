@@ -3,7 +3,8 @@ var previous_heap = window.performance.memory
   : 0;
 var previous_time = window.performance.now();
 
-var measurements = [];
+var measured_mem = [];
+var measured_time = [];
 
 function profileMemory(event) {
   if (typeof window.performance.memory === 'undefined') {
@@ -20,10 +21,26 @@ function profileMemory(event) {
   });
 
   // aggregate measurements
-  measurements[event] = measurements[event] || [];
-  measurements[event].push((memory.usedJSHeapSize / mb).toFixed(2));
+  measured_mem[event] = measured_mem[event] || [];
+  measured_mem[event].push(memory.usedJSHeapSize / mb);
+
+  measured_time[event] = measured_time[event] || [];
+  measured_time[event].push(window.performance.now() - previous_time);
 
   // prep for next measurement
   previous_heap = memory.usedJSHeapSize;
   previous_time = window.performance.now();
+}
+
+function logAverages(event) {
+  console.log({
+    time_avg_ms: (
+      measured_time[event].reduce((a, b) => a + b, 0) /
+      measured_time[event].length
+    ).toFixed(2),
+    mem_avg_mb: (
+      measured_mem[event].reduce((a, b) => a + b, 0) /
+      measured_mem[event].length
+    ).toFixed(2),
+  });
 }

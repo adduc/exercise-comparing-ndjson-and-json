@@ -46,7 +46,7 @@
           processJson(chunks.join(''));
 
           // process the middle lines (if any)
-          for (var i = 1; i < lines.length - 2; i++) {
+          for (var i = 1; i < lines.length - 1; i++) {
             processJson(lines[i]);
           }
 
@@ -56,6 +56,8 @@
             chunks.push(lines[lines.length - 1]);
           }
         }
+
+        processJson(chunks.join(''));
 
         console.log('parsed records', parsed.length);
         profileMemory('end ndjson fetch');
@@ -69,11 +71,11 @@
       }
 
       (async function () {
-        for (var i = 0; i < 20; i++) {
+        for (var i = 0; i < 5; i++) {
           await fetch_ndjson();
           parsed.length = 0;
         }
-        console.log(measurements['end ndjson fetch']);
+        logAverages('end ndjson fetch');
       })();
     </script>
   </body>

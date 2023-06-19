@@ -16,6 +16,6 @@ async function bootstrap() {
   await app.register(compression, { customTypes: /x-ndjson/ });
   app.useGlobalInterceptors(new CorsInterceptor());
   app.useStaticAssets({root: join(__dirname, '..', 'public')});
-  await app.listen(3000, '127.0.0.1');
+  await app.listen(3000, '0');
 }
 bootstrap();
