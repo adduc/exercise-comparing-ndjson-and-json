@@ -9,5 +9,5 @@ With a 285MB Payload (2.4MB compressed):
 
 | Method | Memory Usage | Time  |
 | ------ | ------------ | ----- |
-| JSON   | 484 MB       | 2.27s |
-| NDJSON | 292 MB       | 1.97s |
+| JSON   | 480 MB       | 2.81s |
+| NDJSON | 191 MB       | 3.09s |

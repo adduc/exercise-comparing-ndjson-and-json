@@ -1,44 +1,21 @@
 <!DOCTYPE html>
 <html>
   <body>
+    <script src="util.js"></script>
     <script>
-      var previous_heap = window.performance.memory
-        ? window.performance.memory.usedJSHeapSize
-        : 0;
-      var previous_time = window.performance.now();
-      function profileMemory(event) {
-        if (typeof window.performance.memory === 'undefined') {
-          return;
-        }
-
-        var mb = 1024 * 1024;
-        var memory = window.performance.memory;
-
-        console.log({
-          event,
-          delta_time_ms: window.performance.now() - previous_time,
-          delta_mb: ((memory.usedJSHeapSize - previous_heap) / mb).toFixed(2),
-          //   total_mb: memory.totalJSHeapSize / mb,
-          used_mb: (memory.usedJSHeapSize / mb).toFixed(2),
-          //   heap_limit_mb: memory.jsHeapSizeLimit / mb,
-        });
-
-        previous_heap = memory.usedJSHeapSize;
-        previous_time = window.performance.now();
-      }
-
       async function fetch_json() {
-        var response = await fetch('/json');
+        const response = await fetch('/json');
         profileMemory('start json fetch');
-        var data = JSON.parse(await response.text());
-        console.log('json', data.length);
+        const data = JSON.parse(await response.text());
+        console.log('parsed records', data.length);
         profileMemory('end json fetch');
       }
 
       (async function () {
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 20; i++) {
           await fetch_json();
         }
+        console.log(measurements['end json fetch']);
       })();
     </script>
   </body>

@@ -1,51 +1,79 @@
 <!DOCTYPE html>
 <html>
   <body>
+    <script src="util.js"></script>
     <script>
-      var previous_heap = window.performance.memory
-        ? window.performance.memory.usedJSHeapSize
-        : 0;
-      var previous_time = window.performance.now();
-      function profileMemory(event) {
-        if (typeof window.performance.memory === 'undefined') {
-          return;
+      async function* streamAsyncIterator(stream) {
+        // Get a lock on the stream
+        const reader = stream.getReader();
+
+        try {
+          while (true) {
+            // Read from the stream
+            const { done, value } = await reader.read();
+            // Exit if we're done
+            if (done) return;
+            // Else yield the chunk
+            yield value;
+          }
+        } finally {
+          reader.releaseLock();
         }
-
-        var mb = 1024 * 1024;
-        var memory = window.performance.memory;
-
-        console.log({
-          event,
-          delta_time_ms: window.performance.now() - previous_time,
-          delta_mb: ((memory.usedJSHeapSize - previous_heap) / mb).toFixed(2),
-          //   total_mb: memory.totalJSHeapSize / mb,
-          used_mb: (memory.usedJSHeapSize / mb).toFixed(2),
-          //   heap_limit_mb: memory.jsHeapSizeLimit / mb,
-        });
-
-        previous_heap = memory.usedJSHeapSize;
-        previous_time = window.performance.now();
       }
 
       async function fetch_ndjson() {
-        var response = await fetch('/ndjson');
         profileMemory('start ndjson fetch');
-        var lines = (await response.text()).split('\n');
-        var length = lines.length;
-        var records = [];
-        for (var i = 0; i < length - 1; i++) {
-          var line = lines[i];
-          var data = JSON.parse(line);
-          records[data.length] = data;
+
+        const utf8Decoder = new TextDecoder('utf-8');
+
+        const url = '/ndjson';
+        const response = await fetch(url);
+        const chunks = [];
+
+        // read the stream as it arrives, buffering data until we have a
+        // complete NDJSON object (i.e. newline character)
+        for await (const chunk of streamAsyncIterator(response.body)) {
+          const decoded = utf8Decoder.decode(chunk);
+
+          if (decoded.indexOf('\n') == -1) {
+            chunks.push(decoded);
+            continue;
+          }
+
+          // process the first line
+          const lines = decoded.split('\n');
+          chunks.push(lines[0]);
+          processJson(chunks.join(''));
+
+          // process the middle lines (if any)
+          for (var i = 1; i < lines.length - 2; i++) {
+            processJson(lines[i]);
+          }
+
+          // save the last line for the next chunk
+          if (lines.length > 1) {
+            chunks.length = 0;
+            chunks.push(lines[lines.length - 1]);
+          }
         }
-        console.log('ndjson', lines.length, records.keys());
+
+        console.log('parsed records', parsed.length);
         profileMemory('end ndjson fetch');
       }
 
+      const parsed = [];
+
+      function processJson(payload) {
+        const data = JSON.parse(payload);
+        parsed.push(...data);
+      }
+
       (async function () {
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 20; i++) {
           await fetch_ndjson();
+          parsed.length = 0;
         }
+        console.log(measurements['end ndjson fetch']);
       })();
     </script>
   </body>
