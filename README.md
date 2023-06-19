@@ -1,7 +1,7 @@
 # Exercise: Profiling memory usage parsing NDJSON and JSON
 
-This exercise demos how NDJSON consumes less memory than JSON to parse
-large payloads, even when the entire payload is already in memory.
+This exercise shows how NDJSON streaming can be used to consume less
+memory in the browser than JSON for parsing large payloads.
 
 ## Benchmarks
 
