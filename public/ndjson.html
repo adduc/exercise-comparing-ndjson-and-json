@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script>
+      var previous_heap = window.performance.memory
+        ? window.performance.memory.usedJSHeapSize
+        : 0;
+      var previous_time = window.performance.now();
+      function profileMemory(event) {
+        if (typeof window.performance.memory === 'undefined') {
+          return;
+        }
+
+        var mb = 1024 * 1024;
+        var memory = window.performance.memory;
+
+        console.log({
+          event,
+          delta_time_ms: window.performance.now() - previous_time,
+          delta_mb: ((memory.usedJSHeapSize - previous_heap) / mb).toFixed(2),
+          //   total_mb: memory.totalJSHeapSize / mb,
+          used_mb: (memory.usedJSHeapSize / mb).toFixed(2),
+          //   heap_limit_mb: memory.jsHeapSizeLimit / mb,
+        });
+
+        previous_heap = memory.usedJSHeapSize;
+        previous_time = window.performance.now();
+      }
+
+      async function fetch_ndjson() {
+        var response = await fetch('/ndjson');
+        profileMemory('start ndjson fetch');
+        var lines = (await response.text()).split('\n');
+        var length = lines.length;
+        var records = [];
+        for (var i = 0; i < length - 1; i++) {
+          var line = lines[i];
+          var data = JSON.parse(line);
+          records[data.length] = data;
+        }
+        console.log('ndjson', lines.length, records.keys());
+        profileMemory('end ndjson fetch');
+      }
+
+      (async function () {
+        for (var i = 0; i < 10; i++) {
+          await fetch_ndjson();
+        }
+      })();
+    </script>
+  </body>
+</html>
